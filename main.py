@@ -105,6 +105,10 @@ class ChatRoom:
             to_user = command_line[2]
             self.show_log(from_user, to_user)
 
+        elif command_line[0] == "quit":
+            # 一応止めるコマンドを作る
+            exit()
+
 
 def main():
     chatroom = ChatRoom()
