@@ -1,0 +1,6 @@
+add_user adam
+add_user eve
+talk adam eve hi
+talk eve adam I hate you
+show_log adam eve
+quit
