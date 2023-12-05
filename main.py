@@ -95,7 +95,9 @@ class ChatRoom:
         elif command_line[0] == "talk":
             from_user = command_line[1]
             to_user = command_line[2]
-            content = " ".join(command_line[3:])
+            content = " ".join(
+                command_line[3:]
+            )  # 文字列は4番目の要素以降, 英語の入力を仮定し, 半角スペースで結合する
             self.talk(from_user, to_user, content)
 
         elif command_line[0] == "show_log":
