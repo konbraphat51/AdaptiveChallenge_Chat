@@ -148,9 +148,9 @@ class ChatRoom:
             if len(command_line) != 3:
                 print("Usage: show_log user_name1 user_name2")
                 return
-            from_user = command_line[1]
-            to_user = command_line[2]
-            self.show_log(from_user, to_user)
+            user_1 = command_line[1]
+            user_2 = command_line[2]
+            self.show_log(user_1, user_2)
 
         elif command_line[0] == "quit":
             # 一応止めるコマンドを作る
@@ -160,8 +160,12 @@ class ChatRoom:
 def main():
     chatroom = ChatRoom()
     while True:
-        command_line = input(">> ")
-        chatroom.parse_chat(command_line)
+        try:
+            command_line = input(">> ")
+            chatroom.parse_chat(command_line)
+        except EOFError:
+            # Ctrl + D で終了
+            break
 
 
 if __name__ == "__main__":
