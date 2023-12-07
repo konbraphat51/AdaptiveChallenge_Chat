@@ -2,7 +2,7 @@
 # logはclass ChatRoomが全て保存
 #
 #
-from typing import List  # will deprecated
+from typing import List, Dict  # will deprecated
 
 
 class User:
@@ -19,16 +19,31 @@ class User:
     def __str__(self):
         return f"{self.name}"
 
+    def __repr__(self):
+        return f"{self.name}"
+
+    def __hash__(self) -> int:  # 辞書型を使うのでhashableに
+        return hash(self.name)
+
 
 class Log:
     """
     Logの情報をまとめるクラス
     """
 
-    def __init__(self, from_user: User, to_user: User, content: str):
+    def __init__(
+        self, from_user: User, to_user: User, content: str, time: int
+    ):
         self.from_user = from_user
         self.to_user = to_user
         self.content: str = content
+        self.time = time
+
+    def __repr__(self) -> str:
+        return f"{self.from_user} -> {self.to_user}: {self.content}"
+
+    def __str__(self) -> str:
+        return f"{self.from_user} -> {self.to_user}: {self.content}"
 
 
 class ChatRoom:
@@ -38,7 +53,11 @@ class ChatRoom:
 
     def __init__(self):
         self.users: List[User] = []
-        self.logs: List[Log] = []
+        self.logs: Dict[Dict[List[Log]]] = {}
+        """
+        {adam: User: {eve: User: [Log], ..., }} のような構造にする
+        """
+        self.time = 0
 
     def add_user(self, user: User or str) -> None:
         if isinstance(user, str):
@@ -47,7 +66,7 @@ class ChatRoom:
         if self.is_user_exists(user):
             print("ERROR: ID already used!")
             return
-        
+
         self.users.append(user)
         print(f"{user} registered!")
         return
@@ -60,10 +79,22 @@ class ChatRoom:
             return
         if from_user == to_user:
             print("Error: same user refered")
-            return 
+            return
         from_user = User(from_user)
         to_user = User(to_user)
-        self.logs.append(Log(from_user, to_user, contents))
+        # self.logs.append(Log(from_user, to_user, contents))
+        try:
+            self.logs[from_user][to_user].append(
+                Log(from_user, to_user, contents, self.time)
+            )
+            self.time += 1
+        except:
+            self.logs[from_user] = {}
+            self.logs[from_user][to_user] = [
+                Log(from_user, to_user, contents, self.time)
+            ]
+            self.time += 1
+
         return
 
     def show_log(self, user_1: str, user_2: str):
@@ -72,15 +103,16 @@ class ChatRoom:
             return
         if user_1 == user_2:
             print("Error: same user refered")
-            return 
+            return
         user_1 = User(user_1)
         user_2 = User(user_2)
-        for log in self.logs:
-            if [log.from_user, log.to_user] == [user_1, user_2] or [
-                log.from_user,
-                log.to_user,
-            ] == [user_2, user_1]:
-                print(f"{log.from_user} -> {log.to_user}: {log.content}")
+
+        contents1 = self.logs[user_1][user_2]
+        contents2 = self.logs[user_2][user_1]
+        contents = contents1 + contents2
+        contents = sorted(contents, key=lambda x: x.time)
+        for content in contents:
+            print(content)
 
     def is_user_exists(self, user: User or str) -> bool:
         # ChatRoom内にいるかを検索する
@@ -93,18 +125,18 @@ class ChatRoom:
         return False
 
     def parse_chat(self, command_line: str):
-        command_line = command_line.split(" ") #半角区切りにする
+        command_line = command_line.split(" ")  # 半角区切りにする
         if command_line[0] == "add_user":
             if len(command_line) != 2:
                 print("Usage: add_user user_name")
-                return 
+                return
             user = command_line[1]
             self.add_user(user)
 
         elif command_line[0] == "talk":
             if len(command_line) < 3:
                 print("Usage: talk from_user_name to_user_name talk_content")
-                return 
+                return
             from_user = command_line[1]
             to_user = command_line[2]
             content = " ".join(
@@ -115,7 +147,7 @@ class ChatRoom:
         elif command_line[0] == "show_log":
             if len(command_line) != 3:
                 print("Usage: show_log user_name1 user_name2")
-                return 
+                return
             from_user = command_line[1]
             to_user = command_line[2]
             self.show_log(from_user, to_user)
