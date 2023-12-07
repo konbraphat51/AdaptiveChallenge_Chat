@@ -43,8 +43,8 @@ class ChatRoom:
     def add_user(self, user: User or str) -> None:
         if isinstance(user, str):
             user = User(user)
-            
-        if user in self.users:
+
+        if self.is_user_exists(user):
             print("ERROR: ID already used!")
             return
         
@@ -88,9 +88,8 @@ class ChatRoom:
         if isinstance(user, str):
             user = User(user)
 
-        for other_user in self.users:
-            if other_user == user:
-                return True
+        if user in self.users:
+            return True
         return False
 
     def parse_chat(self, command_line: str):
@@ -103,7 +102,6 @@ class ChatRoom:
             self.add_user(user)
 
         elif command_line[0] == "talk":
-            print(command_line)
             if len(command_line) < 3:
                 print("Usage: talk from_user_name to_user_name talk_content")
                 return 
