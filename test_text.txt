@@ -1,6 +1,11 @@
+#test1: 普通に実行されるはず
 add_user adam
 add_user eve
 talk adam eve hi
 talk eve adam I hate you
 show_log adam eve
 quit
+
+#test2 同じ人物を指定したことによるエラーが出るはず
+add_user adam
+talk adam adam hi
