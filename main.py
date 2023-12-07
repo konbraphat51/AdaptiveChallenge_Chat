@@ -57,6 +57,9 @@ class ChatRoom:
         ):
             print("Error: no user ID")
             return
+        if from_user == to_user:
+            print("Error: same user refered")
+            return 
         from_user = User(from_user)
         to_user = User(to_user)
         self.logs.append(Log(from_user, to_user, contents))
@@ -66,6 +69,9 @@ class ChatRoom:
         if not self.is_user_exists(user_1) or not self.is_user_exists(user_2):
             print("Error: no user ID")
             return
+        if user_1 == user_2:
+            print("Error: same user refered")
+            return 
         user_1 = User(user_1)
         user_2 = User(user_2)
         for log in self.logs:
