@@ -52,7 +52,7 @@ class ChatRoom:
         return
 
     def talk(self, from_user: str, to_user: str, contents: str):
-        if not self.is_exists_user(from_user) or not self.is_exists_user(
+        if not self.is_user_exists(from_user) or not self.is_user_exists(
             to_user
         ):
             print("Error: no user ID")
@@ -63,7 +63,7 @@ class ChatRoom:
         return
 
     def show_log(self, user_1: str, user_2: str):
-        if not self.is_exists_user(user_1) or not self.is_exists_user(user_2):
+        if not self.is_user_exists(user_1) or not self.is_user_exists(user_2):
             print("Error: no user ID")
             return
         user_1 = User(user_1)
@@ -75,7 +75,7 @@ class ChatRoom:
             ] == [user_2, user_1]:
                 print(f"{log.from_user} -> {log.to_user}: {log.content}")
 
-    def is_exists_user(self, user: User or str) -> bool:
+    def is_user_exists(self, user: User or str) -> bool:
         # ChatRoom内にいるかを検索する
         # 名前でもUserクラスでも使えるようにした
         if isinstance(user, str):
@@ -87,12 +87,19 @@ class ChatRoom:
         return False
 
     def parse_chat(self, command_line: str):
-        command_line = command_line.split()
+        command_line = command_line.split(" ") #半角区切りにする
         if command_line[0] == "add_user":
+            if len(command_line) != 2:
+                print("Usage: add_user user_name")
+                return 
             user = command_line[1]
             self.add_user(user)
 
         elif command_line[0] == "talk":
+            print(command_line)
+            if len(command_line) < 3:
+                print("Usage: talk from_user_name to_user_name talk_content")
+                return 
             from_user = command_line[1]
             to_user = command_line[2]
             content = " ".join(
@@ -101,6 +108,9 @@ class ChatRoom:
             self.talk(from_user, to_user, content)
 
         elif command_line[0] == "show_log":
+            if len(command_line) != 3:
+                print("Usage: show_log user_name1 user_name2")
+                return 
             from_user = command_line[1]
             to_user = command_line[2]
             self.show_log(from_user, to_user)
