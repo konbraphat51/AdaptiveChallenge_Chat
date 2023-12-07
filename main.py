@@ -43,10 +43,11 @@ class ChatRoom:
     def add_user(self, user: User or str) -> None:
         if isinstance(user, str):
             user = User(user)
-        for other_user in self.users:
-            if other_user == user:
-                print("ERROR: ID already used!")
-                return
+            
+        if user in self.users:
+            print("ERROR: ID already used!")
+            return
+        
         self.users.append(user)
         print(f"{user} registered!")
         return
