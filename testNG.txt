@@ -1,0 +1,5 @@
+add_user adam
+add_user eve
+talk adam eve are you playing twitter or 5ch?
+talk adam eve I am from the University of Tokyooo
+show_log adam eve
