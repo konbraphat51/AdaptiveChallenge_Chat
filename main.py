@@ -84,6 +84,7 @@ class ChatRoom:
         to_user = User(to_user)
         # self.logs.append(Log(from_user, to_user, contents))
         try:
+            contents = contents.replace("<br>", "\n")
             self.logs[from_user][to_user].append(
                 Log(from_user, to_user, contents, self.time)
             )
