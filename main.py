@@ -4,6 +4,8 @@
 #
 from typing import List, Dict  # will deprecated
 
+# NG Wordsリストのファイル名
+NG_WORDS_FILE = "ngwords.txt"
 
 class User:
     """
@@ -30,6 +32,7 @@ class Log:
     """
     Logの情報をまとめるクラス
     """
+    
 
     def __init__(
         self, from_user: User, to_user: User, content: str, time: int
@@ -59,6 +62,12 @@ class ChatRoom:
         """
         self.time = 0
 
+        # NG Wordsリストを作る
+        f = open(NG_WORDS_FILE, 'r')
+        self.ng_words = f.readlines()
+        self.ng_words = [word.rstrip('\n') for word in self.ng_words]
+        f.close()
+
     def add_user(self, user: User or str) -> None:
         if isinstance(user, str):
             user = User(user)
@@ -69,6 +78,8 @@ class ChatRoom:
 
         self.users.append(user)
         print(f"{user} registered!")
+
+        self.logs[user] = {}
         return
 
     def talk(self, from_user: str, to_user: str, contents: str):
@@ -83,14 +94,14 @@ class ChatRoom:
         from_user = User(from_user)
         to_user = User(to_user)
         # self.logs.append(Log(from_user, to_user, contents))
+
+        contents = contents.replace("<br>", "\n")
         try:
-            contents = contents.replace("<br>", "\n")
             self.logs[from_user][to_user].append(
                 Log(from_user, to_user, contents, self.time)
             )
             self.time += 1
         except:
-            self.logs[from_user] = {}
             self.logs[from_user][to_user] = [
                 Log(from_user, to_user, contents, self.time)
             ]
@@ -108,11 +119,16 @@ class ChatRoom:
         user_1 = User(user_1)
         user_2 = User(user_2)
 
-        contents1 = self.logs[user_1][user_2]
-        contents2 = self.logs[user_2][user_1]
-        contents = contents1 + contents2
+        contents = []
+        if user_1 in self.logs and user_2 in self.logs[user_1]:
+            contents = self.logs[user_1][user_2]
+        if user_2 in self.logs and user_1 in self.logs[user_2]:
+            contents += self.logs[user_2][user_1]
         contents = sorted(contents, key=lambda x: x.time)
         for content in contents:
+            # NGワードのマクス
+            for word in self.ng_words:
+                content = str(content).replace(word, "*")
             print(content)
 
     def is_user_exists(self, user: User or str) -> bool:
