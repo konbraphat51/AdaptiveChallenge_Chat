@@ -32,7 +32,6 @@ class Log:
     """
     Logの情報をまとめるクラス
     """
-    
 
     def __init__(
         self, from_user: User, to_user: User, content: str, time: int
@@ -48,8 +47,35 @@ class Log:
     def __str__(self) -> str:
         return f"{self.from_user} -> {self.to_user}: {self.content}"
 
-
 class ChatRoom:
+    def __init__(self, room_name: str):
+        self.room_name = room_name
+        self.logs: List[Log] = []
+        self.users: List[User] = []
+    
+    def add_user(self, user: User or str) -> None:
+        if isinstance(user, str):
+            user = User(user)
+
+        self.users.append(user)
+        return
+    
+    def is_user_exists(self, user: User or str) -> bool:
+        # RoomManager内にいるかを検索する
+        # 名前でもUserクラスでも使えるようにした
+        if isinstance(user, str):
+            user = User(user)
+
+        if user in self.users:
+            return True
+        return False
+
+
+    
+    def get_all_logs(self) -> List[Log]:
+        return self.logs
+
+class RoomManager:
     """
     Chatの機能と情報をまとめるクラス
     """
@@ -61,6 +87,7 @@ class ChatRoom:
         {adam: User: {eve: User: [Log], ..., }} のような構造にする
         """
         self.time = 0
+        self.rooms: Dict[ChatRoom] = {}
 
         # NG Wordsリストを作る
         f = open(NG_WORDS_FILE, 'r')
@@ -81,58 +108,62 @@ class ChatRoom:
 
         self.logs[user] = {}
         return
+    
+    def check_DM(self, from_user: str, room_name: str) -> str:
+        if not self.is_user_exists(room_name):
+            print("Error: room not exists")
+            return            
+        DM1_name = f"DM_{from_user}_{room_name}"
+        DM2_name = f"DM_{room_name}_{from_user}"
+        if DM1_name in self.rooms:
+            room_name = DM1_name
+        elif DM2_name in self.rooms:
+            room_name = DM2_name
+        else:
+            self.create_room(DM1_name, [from_user, room_name])
+            room_name = DM1_name
+        return room_name
 
-    def talk(self, from_user: str, to_user: str, contents: str):
-        if not self.is_user_exists(from_user) or not self.is_user_exists(
-            to_user
-        ):
-            print("Error: no user ID")
+    def talk(self, from_user: str, room_name: str, contents: str):
+        if not self.is_user_exists(from_user):
+                print("Error: no user ID")
+                return
+        
+        if room_name not in self.rooms:
+            room_name = self.check_DM(from_user, room_name)
+        
+        room = self.rooms[room_name]
+        if not room.is_user_exists(from_user):
+            print("Error: not in room")
             return
-        if from_user == to_user:
-            print("Error: same user refered")
-            return
-        from_user = User(from_user)
-        to_user = User(to_user)
-        # self.logs.append(Log(from_user, to_user, contents))
 
-        contents = contents.replace("<br>", "\n")
-        try:
-            self.logs[from_user][to_user].append(
-                Log(from_user, to_user, contents, self.time)
-            )
-            self.time += 1
-        except:
-            self.logs[from_user][to_user] = [
-                Log(from_user, to_user, contents, self.time)
-            ]
-            self.time += 1
+        room.logs.append(Log(from_user, room_name, contents, self.time))
 
-        return
+    def show_log(self, room_name: str):
+        room = self.rooms[room_name]
+        contents = room.get_all_logs()
 
-    def show_log(self, user_1: str, user_2: str):
-        if not self.is_user_exists(user_1) or not self.is_user_exists(user_2):
-            print("Error: no user ID")
-            return
-        if user_1 == user_2:
-            print("Error: same user refered")
-            return
-        user_1 = User(user_1)
-        user_2 = User(user_2)
-
-        contents = []
-        if user_1 in self.logs and user_2 in self.logs[user_1]:
-            contents = self.logs[user_1][user_2]
-        if user_2 in self.logs and user_1 in self.logs[user_2]:
-            contents += self.logs[user_2][user_1]
-        contents = sorted(contents, key=lambda x: x.time)
         for content in contents:
             # NGワードのマクス
             for word in self.ng_words:
                 content = str(content).replace(word, "*")
             print(content)
+    
+    def create_room(self, room_name: str, users: List[str]):
+        # ルームを作る
+        if self.is_user_exists(room_name):
+            print("Error: room already exists")
+            return
+        room = ChatRoom(room_name)
+        for user in users:
+            if not self.is_user_exists(user):
+                print("Error: no user ID")
+                return
+            room.add_user(user)
+        self.rooms[room_name] = room
 
     def is_user_exists(self, user: User or str) -> bool:
-        # ChatRoom内にいるかを検索する
+        # RoomManager内にいるかを検索する
         # 名前でもUserクラスでも使えるようにした
         if isinstance(user, str):
             user = User(user)
@@ -150,6 +181,14 @@ class ChatRoom:
             user = command_line[1]
             self.add_user(user)
 
+        elif command_line[0] == "create_room":
+            if len(command_line) < 4:
+                print("Usage: create_room room_name user_name1 user_name2 ...")
+                return
+            room_name = command_line[1]
+            users = command_line[2:]
+            self.create_room(room_name, users)
+
         elif command_line[0] == "talk":
             if len(command_line) < 3:
                 print("Usage: talk from_user_name to_user_name talk_content")
@@ -162,12 +201,34 @@ class ChatRoom:
             self.talk(from_user, to_user, content)
 
         elif command_line[0] == "show_log":
-            if len(command_line) != 3:
-                print("Usage: show_log user_name1 user_name2")
+            room_name = command_line[1]
+
+            if len(command_line) == 3:
+                user_1 = command_line[1]
+                user_2 = command_line[2]
+                room_name = self.check_DM(user_1, user_2)
+            elif len(command_line) != 2:
+                print("Usage: show_log room_name")
                 return
-            user_1 = command_line[1]
-            user_2 = command_line[2]
-            self.show_log(user_1, user_2)
+            
+            if not room_name in self.rooms:
+                print("Error: room not exists")
+                return
+
+            self.show_log(room_name)
+        
+        elif command_line[0] == "show_rooms":
+            print(self.rooms.keys())
+        
+        elif command_line[0] == "show_users":
+            if len(command_line) == 1:
+                print(self.users)
+            elif len(command_line) == 2:
+                room_name = command_line[1]
+                if not room_name in self.rooms:
+                    print("Error: room not exists")
+                    return
+                print(self.rooms[room_name].users)
 
         elif command_line[0] == "quit":
             # 一応止めるコマンドを作る
@@ -175,11 +236,11 @@ class ChatRoom:
 
 
 def main():
-    chatroom = ChatRoom()
+    manager = RoomManager()
     while True:
         try:
             command_line = input(">> ")
-            chatroom.parse_chat(command_line)
+            manager.parse_chat(command_line)
         except EOFError:
             # Ctrl + D で終了
             break
