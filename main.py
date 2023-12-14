@@ -12,8 +12,11 @@ class User:
     Userの情報をまとめるクラス
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, type: str = None) -> None:
         self.name = name
+        self.type = type
+        self.credit = 0
+        self.earned = 0
 
     def __eq__(self, other_user):
         return self.name == other_user.name
@@ -53,9 +56,9 @@ class ChatRoom:
         self.logs: List[Log] = []
         self.users: List[User] = []
     
-    def add_user(self, user: User or str) -> None:
+    def add_user(self, user: User or str, type: str=None) -> None:
         if isinstance(user, str):
-            user = User(user)
+            user = User(user, type)
 
         self.users.append(user)
         return
@@ -95,9 +98,9 @@ class RoomManager:
         self.ng_words = [word.rstrip('\n') for word in self.ng_words]
         f.close()
 
-    def add_user(self, user: User or str) -> None:
+    def add_user(self, user: User or str, type: str = None) -> None:
         if isinstance(user, str):
-            user = User(user)
+            user = User(user, type)
 
         if self.is_user_exists(user):
             print("ERROR: ID already used!")
@@ -137,6 +140,21 @@ class RoomManager:
             print("Error: not in room")
             return
 
+        from_user = self.get_user(from_user)
+        if from_user.type == "d":
+            if from_user.credit < 1:
+                print("Error: not enough credit")
+                return
+            from_user.credit -= 1
+
+        users = room.users
+        for user in users:
+            user = self.get_user(user)
+            if user == from_user:
+                continue
+            if user.type == "j":
+                user.earned += 1
+
         room.logs.append(Log(from_user, room_name, contents, self.time))
 
     def show_log(self, room_name: str):
@@ -172,14 +190,45 @@ class RoomManager:
             return True
         return False
 
+    def get_user(self, user: str) -> User:
+        if isinstance(user, str):
+            user = User(user)
+        
+        for u in self.users:
+            if u == user:
+                return u
+        return None
+
     def parse_chat(self, command_line: str):
         command_line = command_line.split(" ")  # 半角区切りにする
         if command_line[0] == "add_user":
-            if len(command_line) != 2:
-                print("Usage: add_user user_name")
+            if len(command_line) != 3:
+                print("Usage: add_user user_name type")
                 return
             user = command_line[1]
-            self.add_user(user)
+            type = command_line[2]
+            if type not in ["d", "j"]:
+                print("Error: illegal type")
+                return
+            self.add_user(user, type)
+        
+        elif command_line[0] == "add_credit":
+            if len(command_line) != 3:
+                print("Usage: add_credit user_name credit")
+                return
+            user = command_line[1]
+            credit = int(command_line[2])
+            if not self.is_user_exists(user):
+                print("Error: no user ID")
+                return
+            if credit < 0:
+                credit = 0
+
+            user = self.get_user(user)
+            if user.type != "d":
+                print("Error: wrong type")
+                return
+            user.credit += credit
 
         elif command_line[0] == "create_room":
             if len(command_line) < 4:
@@ -229,6 +278,21 @@ class RoomManager:
                     print("Error: room not exists")
                     return
                 print(self.rooms[room_name].users)
+
+        elif command_line[0] == "show_credits":
+            if len(command_line) != 2:
+                print("Usage: show_credits user_name")
+                return
+            user_name = command_line[1]
+            if not self.is_user_exists(user_name):
+                print("Error: no user ID")
+                return
+            user = self.get_user(user_name)
+
+            if user.type == "d":
+                print(f"{user.credit} remaining")
+            elif user.type == "j":
+                print(f"{user.earned} earned")
 
         elif command_line[0] == "quit":
             # 一応止めるコマンドを作る
