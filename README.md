@@ -26,7 +26,7 @@ and learn
    Clarifying questions to game master is allowed.  
    The clarification will be open to everybody.
 
-   Challengers forks this repository to develop.  
+   Challengers fork/copy this repository to develop.  
    The task will be shown at `Docs/Requirements`
    If having questions to game master, make an issue on original(this) repository.
 
@@ -38,22 +38,23 @@ and learn
 
 3. **Code Review**  
    Challengers will be the other challenger's **modifer**s.  
-   Challengers will know who will be their modifers in this time.
+   Challengers will know who will be their modifiers in this time.
 
-   Make a `dev_base` -> `main` pull-request, and **Modifers** will make a **code review** on their base-coders.  
-   Base-coders must make an improvement according to their modifers review.  
+   Make a `dev_base` -> `main` pull-request, and **Modifiers** will make a **code review** on their base-coders.  
+   Base-coders must improve according to their modifer's review.  
    This will be repeated until modifers approve.
 
-   Modifers must make the base-code clear to them, because they will implement on it at **4**
+   Modifiers must make the base-code clear to them because they will implement it at **4**
 
-4. **Addition Implemention**  
-   Game Master will show a **addition implemention task** after code reviewing.
+4. **Addition Implementation**  
+   Game Master will show a **addition implementation task** after code reviewing.
 
-   **Modifers** must implement the task **on their base-coder's code**, not modifer's base-code.
+   **Modifiers** must implement the task **on their base-coder's code**, not Modifer's base-code.
 
-   Don't copy&paste from your base-code.
+   **Don't directly copy&paste** from your base code.
+   And **don't ask anything to base-coders** about the project. You should have asked all you nedded in 3.Code Review
 
-5. **Blaming**  
+6. **Blaming**  
    After 4, modifers will make a blame
 
    - What they suffered on adding improvements
